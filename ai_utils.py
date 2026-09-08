@@ -1,16 +1,21 @@
 import os
 import time
 from groq import Groq
-from dotenv import load_dotenv
+import streamlit as st
 
 
-load_dotenv()
+# Get API key from Streamlit secrets or environment
+
+try:
+    api_key = st.secrets["GROQ_API_KEY"]
+except:
+    api_key = os.getenv("GROQ_API_KEY")
 
 
-# Groq API Connection
 client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
+    api_key=api_key
 )
+
 
 
 def call_ai(prompt):
@@ -21,17 +26,14 @@ def call_ai(prompt):
 
             response = client.chat.completions.create(
 
-                # GPT OSS 20B model
                 model="openai/gpt-oss-20b",
 
                 messages=[
 
                     {
                         "role": "system",
-                        "content": """
-                        You are an expert AI education assistant.
-                        Create accurate, personalized study materials.
-                        """
+                        "content":
+                        "You are an expert AI education assistant."
                     },
 
                     {
@@ -41,23 +43,24 @@ def call_ai(prompt):
 
                 ],
 
-                temperature=0.7,
-
-                max_tokens=4000
+                temperature=0.7
 
             )
 
 
-            return response.choices[0].message.content
+            if response.choices:
+
+                return response.choices[0].message.content
 
 
         except Exception as e:
 
-            print(
-                f"Attempt {attempt+1} failed: {e}"
-            )
+            print("ERROR:", e)
+
+            if attempt == 2:
+                return f"AI Error: {str(e)}"
 
             time.sleep(2)
 
 
-    return "AI generation failed."
+    return "AI generation failed"
