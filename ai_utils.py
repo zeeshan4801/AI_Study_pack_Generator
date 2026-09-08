@@ -1,27 +1,63 @@
 import os
 import time
-from openai import OpenAI
+from groq import Groq
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Groq API Connection
+client = Groq(
+    api_key=os.getenv("GROQ_API_KEY")
+)
+
 
 def call_ai(prompt):
 
     for attempt in range(3):
+
         try:
+
             response = client.chat.completions.create(
-                model="gpt-4.1-mini",
+
+                # GPT OSS 20B model
+                model="openai/gpt-oss-20b",
+
                 messages=[
-                    {"role":"system","content":"You are an educational AI assistant."},
-                    {"role":"user","content":prompt}
-                ]
+
+                    {
+                        "role": "system",
+                        "content": """
+                        You are an expert AI education assistant.
+                        Create accurate, personalized study materials.
+                        """
+                    },
+
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+
+                ],
+
+                temperature=0.7,
+
+                max_tokens=4000
+
             )
+
+
             return response.choices[0].message.content
 
+
         except Exception as e:
-            print(e)
+
+            print(
+                f"Attempt {attempt+1} failed: {e}"
+            )
+
             time.sleep(2)
+
 
     return "AI generation failed."
